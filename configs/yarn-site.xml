@@ -27,7 +27,7 @@
             
             <property>
                 <name>yarn.resourcemanager.hostname</name>
-                <value>hadoop-master</value>
+                <value>hadoop-leader</value>
             </property>
 
             <property>
@@ -42,7 +42,7 @@
             
             <property>
                 <name>yarn.log.server.url</name>
-                <value>hadoop-master:19888/jobhistory/logs</value>
+                <value>hadoop-leader:19888/jobhistory/logs</value>
             </property>
             
             <property>

@@ -34,12 +34,12 @@
           <!-- NameNode web address -->
             <property>
                 <name>dfs.namenode.http-address</name>
-                <value>hadoop-master:9870</value>
+                <value>hadoop-leader:9870</value>
             </property>
           <!--secondary NameNode web address  -->
             <property>
                 <name>dfs.namenode.secondary.http-address</name>
-                <value>hadoop-master:9868</value>
+                <value>hadoop-leader:9868</value>
             </property>
             <property>
                 <name>dfs.client.block.write.replace-datanode-on-failure.enable</name>

@@ -10,13 +10,20 @@ import time
 if __name__ == "__main__":
     start = time.time()
     wf_config_file = sys.argv[1]
+    mode = sys.argv[2]
 
-    with open(os.path.join('/workspace/configs',os.path.basename(wf_config_file)),'r') as file:
-        config = yaml.safe_load(file)
+    if mode == "1":
+        config_path = '/workspace/configs'
+        with open(os.path.join(config_path, os.path.basename(wf_config_file)),'r') as file:
+            config = yaml.safe_load(file)
+        output_data_path = '/workspace/data/' + config['data_preprocess']['output_data_path']
+
+    else:
+        with open(wf_config_file,'r') as file:
+            config = yaml.safe_load(file)
+        output_data_path = os.path.join(config['env']['data_path'], config['data_preprocess']['output_data_path']) 
 
     worker_ips = config['env']['node_ips'][1:]
-    data_path = config['data_preprocess']['output_data_path']
-    output_data_path = '/workspace/data/' + data_path
     file_name = 'processed_data.csv'
 
     for i, ip in enumerate(worker_ips):

@@ -13,16 +13,19 @@ def read_csv_files(raw_data_path, engine, ignore_cols=None):
         import modin.pandas as pd 
     else:
         raise ValueError('Engine can either be pandas or modin.')
-
+    
     files = glob.glob(f'{raw_data_path}/*.csv')
     df = []
     for file in files: 
         csv = pd.read_csv(file)
         if ignore_cols is not None:
+            print("dropping columns...")
             csv.drop(columns=ignore_cols, inplace=True)
+        else:
+            print("reading without dropping columns...")
         df.append(csv)
     data = pd.concat(df) 
-    print(data.shape)
+    print(f"data has the shape {data.shape}")
     return data 
 
 
@@ -56,3 +59,11 @@ def has_dir(data_path, folder_name):
             return True 
     
     return False 
+
+
+def read_parquet_spark(spark, data_path):
+
+    data = spark.read.parquet(data_path)
+    print(f'({data.count()}, {len(data.columns)})')
+    
+    return data

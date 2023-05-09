@@ -23,7 +23,7 @@
     <property>
         <!-- NameNode hostname -->
         <name>fs.defaultFS</name>
-        <value>hdfs://hadoop-master:9000</value>
+        <value>hdfs://hadoop-leader:9000</value>
     </property>
     <property>
         <name>hadoop.service.shutdown.timeout</name>
