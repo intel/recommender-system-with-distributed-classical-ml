@@ -1,3 +1,19 @@
+"""
+Copyright [2022-23] [Intel Corporation]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import glob 
 import os 
 import sys 
@@ -13,16 +29,19 @@ def read_csv_files(raw_data_path, engine, ignore_cols=None):
         import modin.pandas as pd 
     else:
         raise ValueError('Engine can either be pandas or modin.')
-
+    
     files = glob.glob(f'{raw_data_path}/*.csv')
     df = []
     for file in files: 
         csv = pd.read_csv(file)
         if ignore_cols is not None:
+            print("dropping columns...")
             csv.drop(columns=ignore_cols, inplace=True)
+        else:
+            print("reading without dropping columns...")
         df.append(csv)
     data = pd.concat(df) 
-    print(data.shape)
+    print(f"data has the shape {data.shape}")
     return data 
 
 
@@ -56,3 +75,11 @@ def has_dir(data_path, folder_name):
             return True 
     
     return False 
+
+
+def read_parquet_spark(spark, data_path):
+
+    data = spark.read.parquet(data_path)
+    print(f'({data.count()}, {len(data.columns)})')
+    
+    return data

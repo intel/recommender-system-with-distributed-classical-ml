@@ -1,1 +1,1 @@
-SPARK_HISTORY_OPTS="-Dspark.history.fs.logDirectory=hdfs://hadoop-master:9000/spark/history"
+SPARK_HISTORY_OPTS="-Dspark.history.fs.logDirectory=hdfs://hadoop-leader:9000/spark/history"

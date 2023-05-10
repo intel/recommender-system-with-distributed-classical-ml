@@ -1,3 +1,19 @@
+"""
+Copyright [2022-23] [Intel Corporation]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import pandas as pd 
 import subprocess
 import glob 
@@ -10,13 +26,20 @@ import time
 if __name__ == "__main__":
     start = time.time()
     wf_config_file = sys.argv[1]
+    mode = sys.argv[2]
 
-    with open(os.path.join('/workspace/configs',os.path.basename(wf_config_file)),'r') as file:
-        config = yaml.safe_load(file)
+    if mode == "1":
+        config_path = '/workspace/configs'
+        with open(os.path.join(config_path, os.path.basename(wf_config_file)),'r') as file:
+            config = yaml.safe_load(file)
+        output_data_path = '/workspace/data/' + config['data_preprocess']['output_data_path']
+
+    else:
+        with open(wf_config_file,'r') as file:
+            config = yaml.safe_load(file)
+        output_data_path = os.path.join(config['env']['data_path'], config['data_preprocess']['output_data_path']) 
 
     worker_ips = config['env']['node_ips'][1:]
-    data_path = config['data_preprocess']['output_data_path']
-    output_data_path = '/workspace/data/' + data_path
     file_name = 'processed_data.csv'
 
     for i, ip in enumerate(worker_ips):

@@ -5974,3 +5974,4 @@ IV)  It is not allowed to remove this license from the distribution of the Vim
      with, at your option.
 
 -------------------------------------------------------------
+
