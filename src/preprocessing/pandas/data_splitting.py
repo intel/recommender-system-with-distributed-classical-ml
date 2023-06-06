@@ -22,11 +22,11 @@ class DataSplitter:
     
     def process(self):
 
-        match list(self.param.keys())[0]:
-            case 'custom_rules': 
-                    self.custom_rules(list(self.param.values())[0])
-            case 'random_split':
-                    self.random_split(list(self.param.values())[0])
+        fisrt_key = list(self.param.keys())[0]
+        if fisrt_key == 'custom_rules':
+            self.custom_rules(list(self.param.values())[0])
+        elif fisrt_key == 'random_split':
+            self.random_split(list(self.param.values())[0])
                 
         return self.train_data, self.test_data  
 

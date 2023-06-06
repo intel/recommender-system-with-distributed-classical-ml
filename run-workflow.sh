@@ -1,6 +1,6 @@
 #!/bin/bash
 
-yaml_path="$1"
+yaml_path="$(realpath $1)"
 
 function parse_yaml {
    local prefix=$2
@@ -53,6 +53,8 @@ if [ -z "${env_node_ips_2}" ]; then
     if [ "$env_node_ips_1" == "$host_name" ]; then
         bash $wf_abs_path/scripts/create-wf-tmp-folders.sh "$wf_tmp_path"
         bash $wf_abs_path/scripts/launch-wf-containers.sh "$env_data_path" "$wf_tmp_path" "$env_config_path" "$wf_abs_path" hadoop-leader
+        docker exec hadoop-leader mkdir -p $(dirname $yaml_path)
+        docker cp $yaml_path hadoop-leader:$yaml_path
         if [ "$cluster_engine" == 'ray' ]; then
             echo "start workflow engine..."
             docker exec hadoop-leader python start-workflow.py --config-file ${yaml_path} --mode 1
@@ -69,6 +71,8 @@ if [ -z "${env_node_ips_2}" ]; then
         env_node_ips_1=$host_name
         bash $wf_abs_path/scripts/create-wf-tmp-folders.sh "$wf_tmp_path"
         bash $wf_abs_path/scripts/launch-wf-containers.sh "$env_data_path" "$wf_tmp_path" "$env_config_path" "$wf_abs_path" hadoop-leader
+        docker exec hadoop-leader mkdir -p $(dirname $yaml_path)
+        docker cp $yaml_path hadoop-leader:$yaml_path
         if [ "$cluster_engine" == 'ray' ]; then
             echo "start workflow engine..."
             docker exec hadoop-leader python start-workflow.py --config-file ${yaml_path} --mode 1
@@ -85,12 +89,15 @@ if [ -z "${env_node_ips_2}" ]; then
         tar_path="$(dirname "$wf_abs_path")"
         curr_time4=$(date +%Y-%m-%d-%H-%M)
         scp -q -r ${wf_abs_path} ${env_node_ips_1}:${tar_path}/ &> ${wf_tmp_path}/logs/scp-${curr_time4}.log
+        scp -q -r $yaml_path ${env_node_ips_1}:$yaml_path &> ${wf_tmp_path}/logs/scp-${curr_time4}.log
 
         echo -e "\nssh to master ${master_ip}"
         ssh ${env_node_ips_1} "
             cd ${wf_abs_path}
             bash ./scripts/create-wf-tmp-folders.sh ${wf_tmp_path}
             bash ./scripts/launch-wf-containers.sh ${env_data_path} ${wf_tmp_path} ${env_config_path} ${wf_abs_path} hadoop-leader
+            docker exec hadoop-leader mkdir -p $(dirname $yaml_path)
+            docker cp $yaml_path hadoop-leader:$yaml_path
         "
 
         if [ "$cluster_engine" == 'ray' ]; then
@@ -116,16 +123,21 @@ else
     if [ "$host_name" == "$env_node_ips_1" ]; then
         bash $wf_abs_path/scripts/create-wf-tmp-folders.sh "$wf_tmp_path"
         bash $wf_abs_path/scripts/launch-wf-containers.sh "$env_data_path" "$wf_tmp_path" "$env_config_path" "$wf_abs_path" hadoop-leader
+        docker exec hadoop-leader mkdir -p $(dirname $yaml_path)
+        docker cp $yaml_path hadoop-leader:$yaml_path
     else
         tar_path="$(dirname "$wf_abs_path")"
         curr_time2=$(date +%Y-%m-%d-%H-%M)
         scp -q -r ${wf_abs_path} ${env_node_ips_1}:${tar_path}/ &> tee -a ${wf_tmp_path}/logs/scp-${curr_time2}.log
+        scp -q -r $yaml_path ${env_node_ips_1}:$yaml_path &> tee -a ${wf_tmp_path}/logs/scp-${curr_time2}.log
         container_name="hadoop-leader"
         echo -e "\nssh to master ${master_ip}"
         ssh ${env_node_ips_1} "
             cd ${wf_abs_path}
             bash ./scripts/create-wf-tmp-folders.sh ${wf_tmp_path}
             bash ./scripts/launch-wf-containers.sh ${env_data_path} ${wf_tmp_path} ${env_config_path} ${wf_abs_path} ${container_name}
+            docker exec ${container_name} mkdir -p $(dirname $yaml_path)
+            docker cp $yaml_path ${container_name}:$yaml_path
         "
     fi 
     
@@ -137,11 +149,13 @@ else
         tar_path="$(dirname "$wf_abs_path")"
         curr_time3=$(date +%Y-%m-%d-%H-%M)
         scp -q -r ${wf_abs_path} ${!worker_ip}:${tar_path}/ &> ${wf_tmp_path}/logs/scp-${curr_time3}.log
-
+        scp -q -r $yaml_path ${!worker_ip}:$yaml_path &> ${wf_tmp_path}/logs/scp-${curr_time3}.log
         ssh ${!worker_ip} "
             cd ${wf_abs_path}
             bash ./scripts/create-wf-tmp-folders.sh ${wf_tmp_path}
             bash ./scripts/launch-wf-containers.sh ${env_data_path} ${wf_tmp_path} ${env_config_path} ${wf_abs_path} ${container_name}
+            docker exec ${container_name} mkdir -p $(dirname $yaml_path)
+            docker cp $yaml_path ${container_name}:$yaml_path
         "
     done
 
