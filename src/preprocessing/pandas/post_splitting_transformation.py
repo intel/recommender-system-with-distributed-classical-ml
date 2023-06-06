@@ -87,11 +87,11 @@ class PostSplittingTransformer:
     def process(self):
 
         for step in self.steps:
-            match list(step.keys())[0]: 
-                case 'target_encoding': 
-                    self.target_encoding(list(step.values())[0])
-                case 'label_encoding':
-                    self.label_encoding(list(step.values())[0])
+            first_key = list(step.keys())[0]
+            if first_key == 'target_encoding':
+                self.target_encoding(list(step.values())[0])
+            elif first_key == 'label_encoding':
+                self.label_encoding(list(step.values())[0])
         
         return self.train_data, self.test_data  
 
