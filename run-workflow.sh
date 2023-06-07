@@ -89,6 +89,7 @@ if [ -z "${env_node_ips_2}" ]; then
         tar_path="$(dirname "$wf_abs_path")"
         curr_time4=$(date +%Y-%m-%d-%H-%M)
         scp -q -r ${wf_abs_path} ${env_node_ips_1}:${tar_path}/ &> ${wf_tmp_path}/logs/scp-${curr_time4}.log
+        scp -q -r ${env_config_path} ${env_node_ips_1}:${env_config_path}/ &> ${wf_tmp_path}/logs/scp-${curr_time4}.log
         scp -q -r $yaml_path ${env_node_ips_1}:$yaml_path &> ${wf_tmp_path}/logs/scp-${curr_time4}.log
 
         echo -e "\nssh to master ${master_ip}"
@@ -129,6 +130,7 @@ else
         tar_path="$(dirname "$wf_abs_path")"
         curr_time2=$(date +%Y-%m-%d-%H-%M)
         scp -q -r ${wf_abs_path} ${env_node_ips_1}:${tar_path}/ &> tee -a ${wf_tmp_path}/logs/scp-${curr_time2}.log
+        scp -q -r ${env_config_path} ${env_node_ips_1}:${env_config_path}/ &> tee -a ${wf_tmp_path}/logs/scp-${curr_time2}.log
         scp -q -r $yaml_path ${env_node_ips_1}:$yaml_path &> tee -a ${wf_tmp_path}/logs/scp-${curr_time2}.log
         container_name="hadoop-leader"
         echo -e "\nssh to master ${master_ip}"
@@ -149,6 +151,7 @@ else
         tar_path="$(dirname "$wf_abs_path")"
         curr_time3=$(date +%Y-%m-%d-%H-%M)
         scp -q -r ${wf_abs_path} ${!worker_ip}:${tar_path}/ &> ${wf_tmp_path}/logs/scp-${curr_time3}.log
+        scp -q -r ${env_config_path} ${!worker_ip}:${env_config_path}/ &> ${wf_tmp_path}/logs/scp-${curr_time3}.log
         scp -q -r $yaml_path ${!worker_ip}:$yaml_path &> ${wf_tmp_path}/logs/scp-${curr_time3}.log
         ssh ${!worker_ip} "
             cd ${wf_abs_path}
