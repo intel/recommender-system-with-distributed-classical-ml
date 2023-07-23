@@ -88,7 +88,7 @@ class PostSplittingTransformer:
 
         for step in self.steps:
             first_key = list(step.keys())[0]
-            if first_key == 'target_encoding':
+            if first_key == 'target_encoding': 
                 self.target_encoding(list(step.values())[0])
             elif first_key == 'label_encoding':
                 self.label_encoding(list(step.values())[0])

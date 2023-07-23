@@ -31,5 +31,5 @@ docker run -itd \
         -e HTTP_PROXY=$HTTP_PROXY \
         -e https_proxy=$https_proxy \
         -e http_proxy=$http_proxy \
-        intel/ai-workflows:beta-fraud-detection-classical-ml |& tee -a ${tmp_path}/logs/launch-${curr_hour}.log
+        intel/ai-workflows:pa-fraud-detection-classical-ml |& tee -a ${tmp_path}/logs/launch-${curr_hour}.log
 

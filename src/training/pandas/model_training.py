@@ -36,7 +36,7 @@ sys.path.insert(0, f"{SRC_PATH}/utils")
 from data_utils import *
 
 class Trainer:
-    def __init__(self, data_spec, df, model_spec, test_backend, in_memory, tmp_path, worker_ips=None, ray_params=None, hpo_spec=None): 
+    def __init__(self, data_spec, df, model_spec, test_backend, in_memory, tmp_path, worker_ips=None, ray_params=None, hpo_spec=None):
         self.target_col = data_spec['target_col']
         try:
             self.ignore_cols = data_spec['ignore_cols']
@@ -75,6 +75,11 @@ class Trainer:
         self.tmp_data_path = os.path.join(tmp_path, 'data')
         self.log_path = os.path.join(tmp_path, 'logs')
 
+    def validate_data_classification(self, train, valid):
+            diff = set(train[self.target_col]) - set(valid[self.target_col])
+            if len(diff) != 0:
+                raise Exception(f"The validation set lacks certain class(es): {diff}")
+
     def process(self):
         print("read and prepare data for training...")
         train, valid, test = self.split_data(self.df, self.data_split)
@@ -87,9 +92,11 @@ class Trainer:
             print("start xgboost model training...")
             if self.is_multi_node:
                 
-                xgb_model = XGBoostRay(train, valid, test, self.target_col, self.model_params, self.training_params, self.ray_params)
+                data_analysis = {'data size': {'train size': len(train), 'valid size': len(valid), 'test size': len(test)}}
+                xgb_model = XGBoostRay(train, valid, test, self.target_col, self.model_params, self.training_params, self.ray_params, data_analysis)
                 self.model = xgb_model.fit()
             else:
+                self.validate_data_classification(train, valid)
                 xgb_model = XGBoost(train, valid, test, self.target_col, self.model_params, self.training_params)
                 self.model = xgb_model.fit()
             
@@ -97,7 +104,7 @@ class Trainer:
                 test_result = self.test_model(self.test_backend, test, self.target_col, self.test_metric)
                 print(f"testing results: {self.test_metric} on test set is {test_result}")
         else:
-            raise NotImplementedError('currently only xgboost model is supported')    
+            raise NotImplementedError('currently only xgboost model is supported')
     
     def run_hpo(self):
         print("read and prepare data for training...")
@@ -108,12 +115,13 @@ class Trainer:
             if self.is_multi_node:
                 train_path, valid_path, test_path = self.prepare_data(train, valid, test, 'csv')
                 self.distribute_data(self.tmp_data_path, self.worker_ips)
-
+                data_analysis = {'data size': {'train size': len(train), 'valid size': len(valid), 'test size': len(test)}}
                 print("start xgboost HPO...")
                 xgb_model = XGBoostRay(train_path, valid_path, test_path, self.target_col, 
-                                            self.model_params, self.training_params, self.ray_params)
+                                            self.model_params, self.training_params, self.ray_params, data_analysis)
                 xgb_model.tune(self.log_path)
                 xgb_model.print_best_configs(self.test_metric)
+                xgb_model.save_best_configs(self.log_path, self.test_metric)
                 test_result = xgb_model.analysis.best_result[f"test-{self.test_metric}"]
                 print(f"{self.test_metric} of the best configs on test set is {test_result}")
             else:
@@ -208,7 +216,8 @@ class XGBoost:
         except:
             self.epoch_log_interval = 25
         self.evals_result = []
-    
+        self.data_analysis = {'data size': {'train size': len(train_df), 'valid size': len(valid_df), 'test size': len(test_df)}}
+        
     def fit(self):
 
         model = xgb.train(self.model_params, **self.training_params, dtrain=self.dtrain, evals=self.watch_list)    
@@ -280,13 +289,21 @@ class XGBoost:
         study.optimize(self._train_model, n_trials=num_trials, show_progress_bar = True)
         self.best_trial = study.best_trial
 
-
-    def save_best_configs(self, save_path):
-        now = str(datetime.now().strftime("%Y-%m-%d+%H%M%S"))
+    def save_best_configs(self, save_path, has_suffix=True):
+        result = self.evals_result[self.best_trial._trial_id]
+        result['data analysis'] = self.data_analysis
         values = {'best accuracy': self.best_trial.value, 'best params': self.best_trial.params}
-        with open(f'{save_path}/best_model_configs_{now}.json', 'w') as fp:
+        best_config_file_name = 'best_model_configs'
+        best_result_file_name = 'best_result'
+        if has_suffix:
+            now = str(datetime.now().strftime("%Y-%m-%d+%H%M%S"))
+            best_config_file_name += f'_{now}'
+            best_result_file_name += f'_{now}'
+        best_config_file_name += '.json'
+        with open(os.path.join(save_path, best_config_file_name), 'w') as fp:
             json.dump(values, fp)
-
+        with open(os.path.join(save_path, best_result_file_name), 'w') as fp:
+            json.dump(result, fp)
 
     def print_best_configs(self):
         
@@ -300,7 +317,7 @@ class XGBoost:
 
 class XGBoostRay:
 
-    def __init__(self, train, valid, test, target_col, model_params, training_params, ray_params):
+    def __init__(self, train, valid, test, target_col, model_params, training_params, ray_params, data_analysis=None):
         self.dtrain = RayDMatrix(data=train, label=target_col)
         self.dvalid = RayDMatrix(data=valid, label=target_col)
         self.dtest =  RayDMatrix(data=test, label=target_col)
@@ -308,12 +325,12 @@ class XGBoostRay:
         self.model_params = model_params
         self.training_params = training_params
         try:
-            self.epoch_log_interval = training_params['verbose_eval']
+            self.epoch_log_interval = training_params['training_params']['verbose_eval'] if 'training_params' in training_params else training_params['verbose_eval']
         except:
             self.epoch_log_interval = 25
         self.ray_params = RayParams(**ray_params) 
         self.evals_result = {}
-
+        self.data_analysis = data_analysis
     def fit(self):
 
         model = train(self.model_params, **self.training_params, dtrain=self.dtrain, evals=self.watch_list, ray_params=self.ray_params)
@@ -375,13 +392,22 @@ class XGBoostRay:
         for key, value in self.analysis.best_config.items():
             print("    {}: {}".format(key, value))
 
-    def save_best_configs(self, save_path):
-        now = str(datetime.now().strftime("%Y-%m-%d+%H%M%S"))
-        values = {'best accuracy': self.analysis.best_result[f"eval-{self.test_metric}"], 
+    def save_best_configs(self, save_path, test_metric, has_suffix=True):
+        result = self.analysis.best_result
+        values = {'best accuracy': self.analysis.best_result[f"eval-{test_metric}"],
                     'best params': self.analysis.best_config}
-        with open(f'{save_path}/best_model_configs_{now}.json', 'w') as fp:
+        result['data analysis'] = self.data_analysis
+        best_config_file_name = 'best_model_configs'
+        best_result_file_name = 'best_result'
+        if has_suffix:
+            now = str(datetime.now().strftime("%Y-%m-%d+%H%M%S"))
+            best_config_file_name += f'_{now}'
+            best_result_file_name += f'_{now}'
+        best_config_file_name += '.json'
+        with open(os.path.join(save_path, best_config_file_name), 'w') as fp:
             json.dump(values, fp)
-
+        with open(os.path.join(save_path, best_result_file_name), 'w') as fp:
+            json.dump(result, fp)
 
     def decode_search_params(self, search_params):
         defined_search_params = {}
