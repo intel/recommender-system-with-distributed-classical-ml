@@ -1,17 +1,19 @@
 # Distributed Classical ML Workflow
+
+## Introduction
 Learn to use Intel's CPU hardware and Intel optimized software for distributed data preprocessing and model training using Modin, Spark and Ray. Boost your productivity in building an end-to-end machine learning pipeline to solve classical machine learning tasks such as regression and classification with XGBoost.
 
-This workflow is used by the [Credit Card Fraud Detection Reference Use Case](https://github.com/oneapi-src/credit-card-fraud-detection).
+This workflow is used by the [Credit Card Fraud Detection Reference Use Case](https://github.com/intel/credit-card-fraud-detection).
 
 Check out more workflow examples in the [Developer Catalog](https://developer.intel.com/aireferenceimplementations).
 
 
-## Overview
+## Solution Technical Overview
 This repository contains an end-to-end workflow that lets you quickly set up a distributed machine learning pipeline using XGBoost. It originates from Intel's democratization solution for the [ACM RecSys-2021 challenge](http://www.recsyschallenge.com/2021/) and is designed for a wide range of classical ML tasks such as regression or classification on large-scale tabular dataset. The top 3 benefits users would get from this workflow are:
 
 - **quickly set-up a machine learning pipeline using the workflow configuration files**
     
-    Thanks to the config-file driven design, you can quickly build an end-to-end machine learning pipeline without writing a single line of code. All you need to do is define the workflow configuration files (see examples in `application/fraud_detection/workflow-config.yaml`) and start the workflow with one command: `./start-workflow.sh <path of workflow-config.yaml>` 
+    Thanks to the config-file driven design, you can quickly build an end-to-end machine learning pipeline without writing a single line of code. All you need to do is define the workflow configuration files (see examples in `applications/fraud_detection/workflow-config.yaml`) and start the workflow with one command: `./run-workflow.sh <path of workflow-config.yaml>` 
 
 - **low-effort in scaling your existing single-node machine learning pipeline to a cluster**
 
@@ -78,12 +80,12 @@ Depending on your need, you may need either `data-preprocessing.yaml` or `model-
 ## Get Started
 ### 1. Download the Workflow Repository
 Create a working directory for the workflow and clone the [Main
-Repository](https://github.com/intel/recommender-system-with-distributed-classical-ml.git) into your working
+Repository](https://github.com/intel/recommender-system-with-classical-ml.git) into your working
 directory.
 
 ```bash
-cd /home
-git clone https://github.com/intel/recommender-system-with-distributed-classical-ml.git
+export $WORKSPACE=/home
+git clone https://github.com/intel/recommender-system-with-classical-ml.git $WORKSPACE/classical-ml
 ```
 
 ### 2. Download the Datasets
@@ -93,14 +95,14 @@ We recommend you put the data files in one folder under a dataset parent folder 
 This `/home/data` would be the `DATA_PATH` defined in the `workflow-config.yaml`.
 
 ```bash 
-# under /home, create data folder
-mkdir -p data/input
-mkdir -p data/output 
-cd data/input
+mkdir -p $WORKSPACE/data/input
+mkdir -p $WORKSPACE/data/output
+cd $WORKSPACE/data/input
 <download datasets using wget, curl, rsync, etc. to dataset folder>
 ```
 
 Now you are well prepared for running the workflow either using Docker or on bare-metal machines. We recommend users using Docker, because it saves a lot of time and effort to set-up the workflow environment.
+
 
 ## Run Using Docker
 Follow these instructions to set up and run using Docker. For running on bare metal, see the [bare metal installation](docs/bare-metal-installation.md) document. 
@@ -112,16 +114,25 @@ Note that while **Docker Engine** is free to use, **Docker Desktop** may require
 you to purchase a license.  See the [Docker Engine Server installation
 instructions](https://docs.docker.com/engine/install/#server) for details.
 
+If the Docker image is run on a cloud service, mention they may also need
+credentials to perform training and inference related operations (such as these
+for Azure):
+- [Set up the Azure Machine Learning Account](https://azure.microsoft.com/en-us/free/machine-learning)
+- [Configure the Azure credentials using the Command-Line Interface](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli)
+- [Compute targets in Azure Machine Learning](https://learn.microsoft.com/en-us/azure/machine-learning/concept-compute-target)
+- [Virtual Machine Products Available in Your Region](https://azure.microsoft.com/en-us/explore/global-infrastructure/products-by-region/?products=virtual-machines&regions=us-east)
+
 ### 2. Set Up Docker Image 
 On each of your cluster machine, use the following command to pull the workflow docker image:
 ```bash
-docker pull intel/ai-workflows:beta-fraud-detection-classical-ml
+docker pull intel/ai-workflows:pa-fraud-detection-classical-ml
 ```
 Alternatively, you can also build image using the build-image bash script and copy the image over to your worker nodes as follows:
 
 ```bash
 # build docker image
-./scripts/build-image.sh
+cd $WORKSPACE/classical-ml
+$WORKSPACE/classical-ml/scripts/build-image.sh
 # save docker image on master node 
 docker save -o wf-image.tar classical-ml-wf:latest
 # set env variables
@@ -135,15 +146,15 @@ cd $WORKER_PATH
 ## unpack the docker image 
 docker load -i wf-image.tar 
 ```
-In this case, you would need to manually change the docker image name from `intel/ai-workflows:beta-fraud-detection-classical-ml` to `classical-ml-wf:latest` as specified in the `scripts/launch-wf-containers.sh`. 
+In this case, you would need to manually change the docker image name from `intel/ai-workflows:pa-fraud-detection-classical-ml` to `classical-ml-wf:latest` as specified in the `scripts/launch-wf-containers.sh`. 
 
 Furthermore, you will need to ensure the password-less ssh between your cluster nodes. Otherwise, you would need to manually enter the password every time data folder transportation happens between the cluster nodes. For password-less ssh, check out this [post](https://unix.stackexchange.com/questions/612023/how-to-set-passwordless-authentication-in-a-cluster-where-users-home-directory).
 
 
 ### 3. Run Docker Image
-The workflow provides a collection of well-written bash scripts to make it easy for you to use the workflow. All you need to do is define your own workflow configuration files and the best way to write configuration files is to follow the example yaml files in the `application/fraud_detection` folder, because the currently supported features are all included in the examples together with the explanations. You just need to comment or comment out the lines based on your needs. Once the configuration files are defined, use the following command to start the workflow:
+The workflow provides a collection of well-written bash scripts to make it easy for you to use the workflow. All you need to do is define your own workflow configuration files and the best way to write configuration files is to follow the example yaml files in the `applications/fraud_detection` folder, because the currently supported features are all included in the examples together with the explanations. You just need to comment or comment out the lines based on your needs. Once the configuration files are defined, use the following command to start the workflow:
 ```bash
-./start-workflow.sh application/fraud_detection/workflow-config.yaml
+$WORKSPACE/classical-ml/run-workflow.sh $WORKSPACE/classical-ml/applications/fraud_detection/workflow-config.yaml
 ```
 The default `workflow-config.yaml` will do data preprocessing for the fraud detection raw data using pandas on your local machine. 
 
@@ -162,18 +173,18 @@ We have shown what this workflow does and how it works in a high-level overview.
 For more information about this workflow or to read about other relevant workflow
 examples, see these guides and software resources:
 
-- [Credit Card Fraud Detection Reference Kit](https://github.com/intel/credit-card-fraud-detection)
+- [Credit Card Fraud Detection Reference Kit](https://github.com/oneapi-src/credit-card-fraud-detection)
 - [Graph Neural Networks and Analytics](https://github.com/intel/graph-neural-networks-and-analytics)
 
 
 ## Troubleshooting
 Potential issues and workarounds related to Hadoop and Spark can be found in [Hadoop Traps & Pitfalls](docs/hadoop-traps-pitfalls.md) and [Spark Traps & Pitfalls](docs/spark-traps-pitfalls.md). For other issues, please submit [GitHub
-issues](https://github.com/intel/recommender-system-with-distributed-classical-ml/issues). 
+issues](https://github.com/intel-sandbox/applications.ai.appliedml.workflow.analyticswithpython/issues). 
 
 
 ## Support
 The Distributed Classical ML Workflow team tracks both bugs and
 enhancement requests using [GitHub
-issues](https://github.com/intel/recommender-system-with-distributed-classical-ml/issues).
+issues](https://github.com/intel/recommender-system-with-classical-ml/issues).
 Before submitting a suggestion or bug report, search the existing issues first to
 see if your issue has already been reported.

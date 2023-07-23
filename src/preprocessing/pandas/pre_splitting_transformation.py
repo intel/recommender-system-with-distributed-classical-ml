@@ -27,15 +27,15 @@ class PreSplittingTransformer:
 
         for step in self.steps:
             first_key = list(step.keys())[0]
-            if first_key == 'normalize_feature_names':
+            if first_key == 'normalize_feature_names': 
                 self.normalize_feature_names(list(step.values())[0])
             elif first_key == 'rename_feature_names':
-                raise NotImplementedError
+                raise NotImplementedError 
             elif first_key == 'drop_features':
                 raise NotImplementedError
             elif first_key == 'outlier_treatment':
                 raise NotImplementedError
-            elif first_key == 'categorify':
+            elif first_key == 'categorify': 
                 self.categorify(list(step.values())[0])
             elif first_key == 'strip_chars':
                 self.strip_chars(list(step.values())[0])
@@ -97,7 +97,7 @@ class PreSplittingTransformer:
                         tmp_feature = self.df[target_feature_list[0]].astype('str')
                         for feature in target_feature_list[1:]:
                             tmp_feature = tmp_feature + self.df[feature].astype('str')
-                        self.df[new_feature] = tmp_feature
+                        self.df[new_feature] = tmp_feature 
     
     def change_datatype(self, col_dtypes):
         for col, dtype in col_dtypes.items():

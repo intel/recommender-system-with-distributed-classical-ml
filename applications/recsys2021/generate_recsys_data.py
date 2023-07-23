@@ -127,6 +127,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     data_path = args.save_path
+    data_path = os.path.abspath(data_path)
     save_train_path = os.path.join(data_path,'train')
     save_valid_path = os.path.join(data_path,'valid')
 

@@ -21,11 +21,13 @@ import os
 import sys 
 import csv    
 import yaml 
-import time 
+import time
+import shlex
 
 if __name__ == "__main__":
     start = time.time()
     wf_config_file = sys.argv[1]
+    wf_config_file = os.path.abspath(wf_config_file)
     mode = sys.argv[2]
 
     if mode == "1":
@@ -44,8 +46,10 @@ if __name__ == "__main__":
 
     for i, ip in enumerate(worker_ips):
         new_file_name = file_name.split('.')[0] +'_'+ str(i+1) + '.' + file_name.split('.')[1]
-        command = f"scp -o StrictHostKeyChecking=no {ip}:{output_data_path}/{file_name} {output_data_path}/{new_file_name}"
-        subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+        src_path = f"{ip}:{output_data_path}/{file_name}"
+        dest_path = f"{output_data_path}/{new_file_name}"
+        command = f"scp -o StrictHostKeyChecking=no {shlex.quote(src_path)} {shlex.quote(dest_path)}"
+        subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
 
     time.sleep(5)
     files = sorted(glob.glob(f'{output_data_path}/*.csv'))
