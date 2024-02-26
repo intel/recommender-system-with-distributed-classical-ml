@@ -125,8 +125,8 @@ class PreSplittingTransformer:
             raise ValueError("only modin or pandas is accepted as dp_engine")
         
         for feature, is_drop in features.items():
-            self.df = pd.concat([self.df, pd.get_dummies(self.df[[feature]])], axis=1)
-            if is_drop:
+            self.df = pd.get_dummies(self.df, columns=[feature], drop_first=True)
+            if is_drop and feature in self.df:
                 self.df.drop(columns=[feature], axis=1, inplace=True)
 
     def string_to_list(self, features):

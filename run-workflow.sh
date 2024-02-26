@@ -52,7 +52,7 @@ if [ -z "${env_node_ips_2}" ]; then
     
     if [ "$env_node_ips_1" == "$host_name" ]; then
         bash $wf_abs_path/scripts/create-wf-tmp-folders.sh "$wf_tmp_path"
-        bash $wf_abs_path/scripts/launch-wf-containers.sh "$env_data_path" "$wf_tmp_path" "$env_config_path" "$wf_abs_path" hadoop-leader
+        bash $wf_abs_path/scripts/launch-wf-containers.sh "$env_data_path" "$wf_tmp_path" "$env_config_path" "$wf_abs_path" "$env_model_path" hadoop-leader
         docker exec hadoop-leader mkdir -p $(dirname $yaml_path)
         docker cp $yaml_path hadoop-leader:$yaml_path
         if [ "$cluster_engine" == 'ray' ]; then
@@ -70,7 +70,7 @@ if [ -z "${env_node_ips_2}" ]; then
     elif [ "$env_node_ips_1" == "localhost" ]; then
         env_node_ips_1=$host_name
         bash $wf_abs_path/scripts/create-wf-tmp-folders.sh "$wf_tmp_path"
-        bash $wf_abs_path/scripts/launch-wf-containers.sh "$env_data_path" "$wf_tmp_path" "$env_config_path" "$wf_abs_path" hadoop-leader
+        bash $wf_abs_path/scripts/launch-wf-containers.sh "$env_data_path" "$wf_tmp_path" "$env_config_path" "$wf_abs_path" "$env_model_path" hadoop-leader
         docker exec hadoop-leader mkdir -p $(dirname $yaml_path)
         docker cp $yaml_path hadoop-leader:$yaml_path
         if [ "$cluster_engine" == 'ray' ]; then
@@ -96,7 +96,7 @@ if [ -z "${env_node_ips_2}" ]; then
         ssh ${env_node_ips_1} "
             cd ${wf_abs_path}
             bash ./scripts/create-wf-tmp-folders.sh ${wf_tmp_path}
-            bash ./scripts/launch-wf-containers.sh ${env_data_path} ${wf_tmp_path} ${env_config_path} ${wf_abs_path} hadoop-leader
+            bash ./scripts/launch-wf-containers.sh ${env_data_path} ${wf_tmp_path} ${env_config_path} ${wf_abs_path} ${env_model_path} hadoop-leader
             docker exec hadoop-leader mkdir -p $(dirname $yaml_path)
             docker cp $yaml_path hadoop-leader:$yaml_path
         "
@@ -123,7 +123,7 @@ else
     echo -e "\non master node..."
     if [ "$host_name" == "$env_node_ips_1" ]; then
         bash $wf_abs_path/scripts/create-wf-tmp-folders.sh "$wf_tmp_path"
-        bash $wf_abs_path/scripts/launch-wf-containers.sh "$env_data_path" "$wf_tmp_path" "$env_config_path" "$wf_abs_path" hadoop-leader
+        bash $wf_abs_path/scripts/launch-wf-containers.sh "$env_data_path" "$wf_tmp_path" "$env_config_path" "$wf_abs_path" "$env_model_path" hadoop-leader
         docker exec hadoop-leader mkdir -p $(dirname $yaml_path)
         docker cp $yaml_path hadoop-leader:$yaml_path
     else
@@ -137,7 +137,7 @@ else
         ssh ${env_node_ips_1} "
             cd ${wf_abs_path}
             bash ./scripts/create-wf-tmp-folders.sh ${wf_tmp_path}
-            bash ./scripts/launch-wf-containers.sh ${env_data_path} ${wf_tmp_path} ${env_config_path} ${wf_abs_path} ${container_name}
+            bash ./scripts/launch-wf-containers.sh ${env_data_path} ${wf_tmp_path} ${env_config_path} ${wf_abs_path} ${env_model_path} ${container_name}
             docker exec ${container_name} mkdir -p $(dirname $yaml_path)
             docker cp $yaml_path ${container_name}:$yaml_path
         "
@@ -156,7 +156,7 @@ else
         ssh ${!worker_ip} "
             cd ${wf_abs_path}
             bash ./scripts/create-wf-tmp-folders.sh ${wf_tmp_path}
-            bash ./scripts/launch-wf-containers.sh ${env_data_path} ${wf_tmp_path} ${env_config_path} ${wf_abs_path} ${container_name}
+            bash ./scripts/launch-wf-containers.sh ${env_data_path} ${wf_tmp_path} ${env_config_path} ${wf_abs_path} ${env_model_path} ${container_name}
             docker exec ${container_name} mkdir -p $(dirname $yaml_path)
             docker cp $yaml_path ${container_name}:$yaml_path
         "

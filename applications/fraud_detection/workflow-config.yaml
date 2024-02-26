@@ -5,6 +5,7 @@ env:
   tmp_path: /home
   data_path: /home/data
   config_path: /home/recommender-system-with-classical-ml/applications/fraud_detection
+  model_path: /workspace/models
 
 
 data_preprocess:

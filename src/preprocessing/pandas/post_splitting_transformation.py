@@ -82,7 +82,6 @@ class PostSplittingTransformer:
         self.test_data = test_data  
         self.steps = steps 
         self.dp_engine = dp_engine
-
     
     def process(self):
 
@@ -99,6 +98,7 @@ class PostSplittingTransformer:
         target_col = params['target_col']
         feature_cols = params['feature_cols']
         smoothing = params['smoothing']
+        encoder_save_path = params['encoders_path'] if 'encoders_path' in params else '/workspace/models/target_encoder.pkl'
 
         if self.dp_engine == 'modin':
             for col in feature_cols:
@@ -106,10 +106,17 @@ class PostSplittingTransformer:
                 self.train_data[col] = tgt_encoder.fit_transform(self.train_data)
                 self.test_data[col] = tgt_encoder.transform(self.test_data) 
         else:
+            encoders = {}
+            import pickle, os
             for col in feature_cols:
                 tgt_encoder = TargetEncoder(smoothing=smoothing)
                 self.train_data[col] = tgt_encoder.fit_transform(self.train_data[col], self.train_data[target_col]).astype('float32')
                 self.test_data[col] = tgt_encoder.transform(self.test_data[col], self.test_data[target_col]).astype('float32')
+                encoders[col] = tgt_encoder
+
+            os.makedirs(os.path.dirname(encoder_save_path), exist_ok=True)
+            with open(encoder_save_path, 'wb') as file:
+                pickle.dump(encoders, file)
 
     def label_encoding(self, params):
 

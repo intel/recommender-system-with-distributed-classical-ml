@@ -22,7 +22,7 @@ from xgboost_ray import RayDMatrix, RayParams, train, predict, RayFileType, RayS
 from datetime import datetime
 import sys 
 import daal4py as d4p
-from sklearn.metrics import average_precision_score, precision_recall_curve, auc
+from sklearn.metrics import average_precision_score, precision_recall_curve, auc, roc_auc_score
 import time 
 import optuna
 import simplejson as json
@@ -104,7 +104,7 @@ class Trainer:
                 test_result = self.test_model(self.test_backend, test, self.target_col, self.test_metric)
                 print(f"testing results: {self.test_metric} on test set is {test_result}")
         else:
-            raise NotImplementedError('currently only xgboost model is supported')
+            raise NotImplementedError(f'currently {self.model_type} model is supported')
     
     def run_hpo(self):
         print("read and prepare data for training...")
@@ -191,14 +191,17 @@ class Trainer:
         if test_metric == 'aucpr':
             precision, recall, _ = precision_recall_curve(test_df[label], probs)
             test_result = auc(recall, precision)
+        elif test_metric == 'auc':
+            test_result = roc_auc_score(test_df[label], probs)
         else:
-            raise NotImplementedError('currently only aucrpr is supported as testing metric')
+            raise NotImplementedError(f'currently {test_metric} is not supported as testing metric')
         
         return test_result 
 
     def save_model(self, save_path):
         now = str(datetime.now().strftime("%Y-%m-%d+%H%M%S"))
-        self.model.save_model(f"{save_path}/{self.model_type}_{now}.json")
+        os.makedirs(save_path, exist_ok=True)
+        self.model.save_model(f"{save_path}/{self.model_type}.json")
         print(f"{self.model_type} model is saved under {save_path}.")
 
 

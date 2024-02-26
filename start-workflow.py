@@ -36,7 +36,6 @@ class WFProcessor:
             self.log_path = '/workspace/tmp/logs'
             self.data_path = '/workspace/data'
             self.tmp_path = '/workspace/tmp'
-            self.model_save_path = os.path.join(self.tmp_path, 'models')
             self.config_path = '/workspace/configs'
             with open(os.path.join(self.config_path,os.path.basename(file_name)),'r') as file:
                 config = yaml.safe_load(file)
@@ -46,7 +45,6 @@ class WFProcessor:
             self.data_path = config['env']['data_path']
             self.tmp_path = os.path.join(config['env']['tmp_path'], 'wf-tmp')
             self.log_path = os.path.join(self.tmp_path, 'logs')
-            self.model_save_path = os.path.join(self.tmp_path, 'models')
             self.config_path = config['env']['config_path']
         
         self.num_node = config['env']['num_node'] 
@@ -73,6 +71,8 @@ class WFProcessor:
             train_config_file = os.path.join(self.config_path, config['training']['train_config_file']) 
             self.train_framework = config['training']['train_framework']
             self.test_backend = config['training']['test_backend']
+            self.model_save_path = config['training']['model_save_path'] if 'model_save_path' in config['training'] else '/workspace/models/xgbmodel/1'
+            
             self.read_training_configs(train_config_file)
             try:
                 self.ray_params = config['training']['ray_params']
@@ -96,6 +96,8 @@ class WFProcessor:
             train_config_file = os.path.join(self.config_path, config['end2end_training']['train_config_file'])
             self.read_training_configs(train_config_file)
             self.test_backend = config['end2end_training']['test_backend']
+            self.model_save_path = config['end2end_training']['model_save_path'] if config['end2end_training']['model_save_path'] is not None else '/workspace/models/xgbmodel/1'
+
             try:
                 self.ray_params = config['end2end_training']['ray_params']
             except:
