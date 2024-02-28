@@ -1,7 +1,7 @@
 pyarrow==14.0.1
 numpy==1.24.3
 pandas==1.5.3
-transformers==4.31.0
+transformers==4.36.0
 pyrecdp==0.1.5
 scikit-learn==1.2.2
 scikit-learn-intelex==2023.1.1
