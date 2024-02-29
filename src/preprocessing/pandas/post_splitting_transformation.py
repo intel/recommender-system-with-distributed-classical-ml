@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import os
 import pandas as pd 
 from category_encoders import TargetEncoder
 from sklearn import preprocessing
@@ -98,7 +98,7 @@ class PostSplittingTransformer:
         target_col = params['target_col']
         feature_cols = params['feature_cols']
         smoothing = params['smoothing']
-        encoder_save_path = params['encoders_path'] if 'encoders_path' in params else '/workspace/models/target_encoder.pkl'
+        encoder_save_path = f"{os.environ['MODEL_DIR']}/target_encoder.pkl"
 
         if self.dp_engine == 'modin':
             for col in feature_cols:
@@ -107,7 +107,7 @@ class PostSplittingTransformer:
                 self.test_data[col] = tgt_encoder.transform(self.test_data) 
         else:
             encoders = {}
-            import pickle, os
+            import pickle
             for col in feature_cols:
                 tgt_encoder = TargetEncoder(smoothing=smoothing)
                 self.train_data[col] = tgt_encoder.fit_transform(self.train_data[col], self.train_data[target_col]).astype('float32')

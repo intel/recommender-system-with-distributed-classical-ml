@@ -71,7 +71,6 @@ class WFProcessor:
             train_config_file = os.path.join(self.config_path, config['training']['train_config_file']) 
             self.train_framework = config['training']['train_framework']
             self.test_backend = config['training']['test_backend']
-            self.model_save_path = config['training']['model_save_path'] if 'model_save_path' in config['training'] else '/workspace/models/xgbmodel/1'
             
             self.read_training_configs(train_config_file)
             try:
@@ -96,7 +95,6 @@ class WFProcessor:
             train_config_file = os.path.join(self.config_path, config['end2end_training']['train_config_file'])
             self.read_training_configs(train_config_file)
             self.test_backend = config['end2end_training']['test_backend']
-            self.model_save_path = config['end2end_training']['model_save_path'] if config['end2end_training']['model_save_path'] is not None else '/workspace/models/xgbmodel/1'
 
             try:
                 self.ray_params = config['end2end_training']['ray_params']
@@ -257,7 +255,7 @@ class WFProcessor:
                 trainer.run_hpo()
             else:
                 trainer.process()
-                trainer.save_model(self.model_save_path)
+                trainer.save_model()
         else:
             raise NotImplementedError('currently only pandas-based model training is supported')
         
@@ -271,7 +269,22 @@ class WFProcessor:
         else:
             raise NotImplementedError('spark engine is to be implemented!')
 
-
+def get_model_dir():
+    training_task = os.getenv('training_task', 'default_task')
+    training_mode = os.getenv('training_mode', 'xgb')
+    
+    if training_mode == 'xgb':
+        suffix = 'xgb'
+    elif training_mode == 'xgb_gnn':
+        suffix = 'final_xgb'
+    else:
+        suffix = 'xgboost'
+    
+    model_save_path = f"/MODELS/{training_task}_{suffix}/1"
+    os.makedirs(model_save_path, exist_ok=True)
+    return model_save_path
+    
+os.environ['MODEL_DIR'] = get_model_dir()
 
 if __name__ == "__main__":
 

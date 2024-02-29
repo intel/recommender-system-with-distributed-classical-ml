@@ -198,11 +198,9 @@ class Trainer:
         
         return test_result 
 
-    def save_model(self, save_path):
-        now = str(datetime.now().strftime("%Y-%m-%d+%H%M%S"))
-        os.makedirs(save_path, exist_ok=True)
-        self.model.save_model(f"{save_path}/{self.model_type}.json")
-        print(f"{self.model_type} model is saved under {save_path}.")
+    def save_model(self):
+        self.model.save_model(f"{os.environ['MODEL_DIR']}/{self.model_type}.json")
+        print(f"{self.model_type} model is saved under {os.environ['MODEL_DIR']}.")
 
 
 class XGBoost:
