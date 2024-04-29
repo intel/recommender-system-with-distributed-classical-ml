@@ -1,4 +1,5 @@
-# Distributed Classical ML Workflow
+# Distributed Classical ML Workflow(EOL)
+*Note: This repository is currently in an End of Life (EOL) status.*
 
 ## Introduction
 Learn to use Intel's CPU hardware and Intel optimized software for distributed data preprocessing and model training using Modin, Spark and Ray. Boost your productivity in building an end-to-end machine learning pipeline to solve classical machine learning tasks such as regression and classification with XGBoost.
